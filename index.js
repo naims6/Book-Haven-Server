@@ -27,6 +27,13 @@ async function run() {
     const database = client.db("the_book_haven");
     const allBooksCollection = database.collection("allBooks");
 
+    // all book api
+    app.get("/all-books", async (req, res) => {
+      const cursor = allBooksCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     // latest book api
     app.get("/latest-books", async (req, res) => {
       const cursor = allBooksCollection.find().sort({ createdAt: -1 }).limit(6);
