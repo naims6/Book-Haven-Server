@@ -30,7 +30,12 @@ async function run() {
 
     // all book api
     app.get("/all-books", async (req, res) => {
-      const cursor = allBooksCollection.find();
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.userEmail = email;
+      }
+      const cursor = allBooksCollection.find(query);
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -52,10 +57,31 @@ async function run() {
       res.send(result);
     });
 
-    // book add api
+    // book adding api
     app.post("/all-books", async (req, res) => {
       const book = req.body;
       const result = await allBooksCollection.insertOne(book);
+      res.send(result);
+    });
+
+    // book update api
+    app.put("/all-books/:id", async (req, res) => {
+      const { id } = req.params;
+      const data = req.body;
+      console.log({ id, data });
+      const query = { _id: new ObjectId(id) };
+      const update = {
+        $set: data,
+      };
+      const result = await allBooksCollection.updateOne(query, update);
+      res.send(result);
+    });
+
+    // book delete api
+    app.delete("/book-delete/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { _id: new ObjectId(id) };
+      const result = await allBooksCollection.deleteOne(query);
       res.send(result);
     });
 
