@@ -5,6 +5,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = 3000;
 app.use(cors());
+app.use(express.json());
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
@@ -48,6 +49,13 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await allBooksCollection.findOne(query);
       // console.log(result);
+      res.send(result);
+    });
+
+    // book add api
+    app.post("/all-books", async (req, res) => {
+      const book = req.body;
+      const result = await allBooksCollection.insertOne(book);
       res.send(result);
     });
 
