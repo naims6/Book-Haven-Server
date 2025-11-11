@@ -30,12 +30,19 @@ async function run() {
 
     // all book api
     app.get("/all-books", async (req, res) => {
-      const email = req.query.email;
+      const { email, sortBy } = req.query;
       const query = {};
       if (email) {
         query.userEmail = email;
       }
-      const cursor = allBooksCollection.find(query).sort({ rating: -1 });
+      sortCondition = {};
+
+      if (sortBy) {
+        sortCondition[sortBy] = -1;
+      }
+      console.log(sortCondition);
+
+      const cursor = allBooksCollection.find(query).sort(sortCondition);
       const result = await cursor.toArray();
       res.send(result);
     });
