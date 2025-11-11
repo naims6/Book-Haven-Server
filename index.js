@@ -27,6 +27,7 @@ async function run() {
     await client.connect();
     const database = client.db("the_book_haven");
     const allBooksCollection = database.collection("allBooks");
+    const commentsCollection = database.collection("userComments");
 
     // all book api
     app.get("/all-books", async (req, res) => {
@@ -90,6 +91,24 @@ async function run() {
       const { id } = req.params;
       const query = { _id: new ObjectId(id) };
       const result = await allBooksCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //  ****************
+    // USER COMMENT DATA
+    // *****************
+    app.post("/comments", async (req, res) => {
+      const comment = req.body;
+      const result = await commentsCollection.insertOne(comment);
+      res.send(result);
+      console.log(comment);
+    });
+
+    // every single book comment
+    app.get("/comments/:id", async (req, res) => {
+      const { id } = req.params;
+      const query = { bookId: id };
+      const result = await commentsCollection.find(query).toArray();
       res.send(result);
     });
 
