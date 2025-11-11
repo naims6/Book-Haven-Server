@@ -35,7 +35,7 @@ async function run() {
       if (email) {
         query.userEmail = email;
       }
-      const cursor = allBooksCollection.find(query);
+      const cursor = allBooksCollection.find(query).sort({ rating: -1 });
       const result = await cursor.toArray();
       res.send(result);
     });
@@ -60,7 +60,8 @@ async function run() {
     // book adding api
     app.post("/all-books", async (req, res) => {
       const book = req.body;
-      const result = await allBooksCollection.insertOne(book);
+      const fixed = { ...book, rating: Number(book.rating) };
+      const result = await allBooksCollection.insertOne(fixed);
       res.send(result);
     });
 
@@ -68,10 +69,10 @@ async function run() {
     app.put("/all-books/:id", async (req, res) => {
       const { id } = req.params;
       const data = req.body;
-      console.log({ id, data });
+      const fixedData = { ...data, rating: Number(data.rating) };
       const query = { _id: new ObjectId(id) };
       const update = {
-        $set: data,
+        $set: fixedData,
       };
       const result = await allBooksCollection.updateOne(query, update);
       res.send(result);
