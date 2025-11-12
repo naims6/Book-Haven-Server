@@ -33,19 +33,28 @@ async function run() {
     // all book api
     app.get("/all-books", async (req, res) => {
       const { email, sortBy } = req.query;
+      // search query
       const query = {};
       if (email) {
         query.userEmail = email;
       }
+      // sort
       sortCondition = {};
-
       if (sortBy) {
         sortCondition[sortBy] = -1;
       }
-      console.log(sortCondition);
 
       const cursor = allBooksCollection.find(query).sort(sortCondition);
       const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    // search book
+    app.get("/all-books/search", async (req, res) => {
+      const searchText = req.query.title;
+      const result = await allBooksCollection
+        .find({ title: { $regex: searchText, $options: "i" } })
+        .toArray();
       res.send(result);
     });
 
