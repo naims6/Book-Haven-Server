@@ -57,7 +57,7 @@ async function run() {
         .toArray();
       res.send(result);
     });
-
+    
     // Enhanced backend API with more filters
     // app.get("/all-books", async (req, res) => {
     //   const {
@@ -118,7 +118,7 @@ async function run() {
     //   }
     // });
 
-    // Search endpoint
+    // search book
     // app.get("/all-books/search", async (req, res) => {
     //   const { title, author, description } = req.query;
 
@@ -137,6 +137,7 @@ async function run() {
     //   res.send(result);
     // });
 
+   
     // latest book api
     app.get("/latest-books", async (req, res) => {
       const cursor = allBooksCollection.find().sort({ createdAt: -1 }).limit(6);
