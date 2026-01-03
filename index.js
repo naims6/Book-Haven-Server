@@ -10,7 +10,7 @@ app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASS}@cluster0.wsfcvqt.mongodb.net/?appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.wsfcvqt.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -31,30 +31,108 @@ async function run() {
     const commentsCollection = database.collection("userComments");
 
     // all book api
+    // app.get("/all-books", async (req, res) => {
+    //   const { email, sortBy } = req.query;
+    //   // search query
+    //   const query = {};
+    //   if (email) {
+    //     query.userEmail = email;
+    //   }
+    //   // sort
+    //   sortCondition = {};
+    //   if (sortBy) {
+    //     sortCondition[sortBy] = -1;
+    //   }
+
+    //   const cursor = allBooksCollection.find(query).sort(sortCondition);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
+
+    // // search book
+    // app.get("/all-books/search", async (req, res) => {
+    //   const searchText = req.query.title;
+    //   const result = await allBooksCollection
+    //     .find({ title: { $regex: searchText, $options: "i" } })
+    //     .toArray();
+    //   res.send(result);
+    // });
+    // Enhanced backend API with more filters
     app.get("/all-books", async (req, res) => {
-      const { email, sortBy } = req.query;
-      // search query
+      const {
+        email,
+        genre,
+        author,
+        sortBy,
+        minRating,
+        page = 1,
+        limit = 8,
+      } = req.query;
+
+      // Build query
       const query = {};
       if (email) {
         query.userEmail = email;
       }
-      // sort
-      sortCondition = {};
-      if (sortBy) {
-        sortCondition[sortBy] = -1;
+      if (genre) {
+        query.genre = genre;
+      }
+      if (author) {
+        query.author = author;
+      }
+      if (minRating) {
+        query.rating = { $gte: parseFloat(minRating) };
       }
 
-      const cursor = allBooksCollection.find(query).sort(sortCondition);
-      const result = await cursor.toArray();
-      res.send(result);
+      // Build sort
+      const sortCondition = {};
+      if (sortBy) {
+        const sortMap = {
+          newest: { createdAt: -1 },
+          oldest: { createdAt: 1 },
+          rating: { rating: -1 },
+          title: { title: 1 },
+        };
+        sortCondition = sortMap[sortBy] || { createdAt: -1 };
+      } else {
+        sortCondition = { createdAt: -1 };
+      }
+
+      // Pagination
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      try {
+        const cursor = allBooksCollection.find(query).sort(sortCondition);
+        const total = await cursor.count();
+        const result = await cursor.skip(skip).limit(parseInt(limit)).toArray();
+
+        res.send({
+          books: result,
+          total,
+          page: parseInt(page),
+          totalPages: Math.ceil(total / parseInt(limit)),
+        });
+      } catch (error) {
+        res.status(500).send({ error: error.message });
+      }
     });
 
-    // search book
+    // Search endpoint
     app.get("/all-books/search", async (req, res) => {
-      const searchText = req.query.title;
-      const result = await allBooksCollection
-        .find({ title: { $regex: searchText, $options: "i" } })
-        .toArray();
+      const { title, author, description } = req.query;
+
+      const query = {};
+      if (title) {
+        query.title = { $regex: title, $options: "i" };
+      }
+      if (author) {
+        query.author = { $regex: author, $options: "i" };
+      }
+      if (description) {
+        query.description = { $regex: description, $options: "i" };
+      }
+
+      const result = await allBooksCollection.find(query).toArray();
       res.send(result);
     });
 
