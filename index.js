@@ -32,21 +32,29 @@ async function run() {
 
     // all book api
     app.get("/all-books", async (req, res) => {
-      const { email, sortBy } = req.query;
-      // search query
-      const query = {};
-      if (email) {
-        query.userEmail = email;
-      }
-      // sort
-      sortCondition = {};
-      if (sortBy) {
-        sortCondition[sortBy] = -1;
-      }
+      try {
+        const { email, sortBy } = req.query;
 
-      const cursor = allBooksCollection.find(query).sort(sortCondition);
-      const result = await cursor.toArray();
-      res.send(result);
+        const query = {};
+        if (email) {
+          query.userEmail = email;
+        }
+
+        let sortCondition = {};
+        if (sortBy) {
+          sortCondition[sortBy] = -1;
+        }
+
+        const result = await allBooksCollection
+          .find(query)
+          .sort(sortCondition)
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        console.error("ALL-BOOKS ERROR:", error);
+        res.status(500).send({ error: error.message });
+      }
     });
 
     // // search book
@@ -57,7 +65,7 @@ async function run() {
         .toArray();
       res.send(result);
     });
-    
+
     // Enhanced backend API with more filters
     // app.get("/all-books", async (req, res) => {
     //   const {
@@ -137,7 +145,6 @@ async function run() {
     //   res.send(result);
     // });
 
-   
     // latest book api
     app.get("/latest-books", async (req, res) => {
       const cursor = allBooksCollection.find().sort({ createdAt: -1 }).limit(6);
